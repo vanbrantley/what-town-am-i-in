@@ -26,8 +26,9 @@ const Map = () => {
                 }
 
                 const currentLocation = await Location.getCurrentPositionAsync({});
+                // console.log(currentLocation);
                 setCurrentLocationMarker(currentLocation);
-                console.log('Set location');
+                // console.log('Set location');
             } catch (error) {
                 console.error('Error updating location:', error);
             }
@@ -89,8 +90,6 @@ const Map = () => {
             if (response.data.results.length > 0) {
                 const result = response.data.results[0];
                 const addressComponents = result.address_components;
-
-                console.log(addressComponents);
 
                 // Find the city (neighborhood / sublocality / locality) and state (administrative_area_level_1) components
                 const neighborhood = addressComponents.find((component) => component.types.includes('neighborhood'))?.long_name;

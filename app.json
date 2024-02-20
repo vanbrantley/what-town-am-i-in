@@ -3,6 +3,9 @@
     "name": "what-town-am-i-in",
     "slug": "what-town-am-i-in",
     "version": "1.0.0",
+    "platforms": [
+      "ios"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +18,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vanbrantley.whattownamiin"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +29,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "eas": {
+      "build": {
+        "releaseChannel": "default"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "297f346b-b8e4-4bb3-9136-58169dc54e4c"
+      }
     }
   }
 }
