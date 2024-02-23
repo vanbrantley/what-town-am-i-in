@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { AppState, StyleSheet, View, Text } from 'react-native';
+import { AppState, StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import * as Location from 'expo-location';
 import Map from './Map';
 import LocationDenied from './LocationDenied';
-import * as Location from 'expo-location';
+import Loading from './Loading';
 
 export default function App() {
 
@@ -47,9 +48,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+        <Loading />
       ) : locationPermission === 'granted' ? (
         <Map />
       ) : (
@@ -63,15 +62,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    fontSize: 24,
-    color: 'rgba(0, 0, 0, 0.5)',
-    fontWeight: 'bold',
   },
 });

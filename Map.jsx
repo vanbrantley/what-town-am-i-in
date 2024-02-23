@@ -4,6 +4,7 @@ import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import TownSign from './TownSign';
+import Loading from './Loading';
 
 const Map = () => {
 
@@ -255,9 +256,7 @@ const Map = () => {
                 </MapView>
 
             ) : (
-                <View style={styles.loadingContainer}>
-                    <Text style={styles.loadingText}>Loading...</Text>
-                </View>
+                <Loading />
             )}
 
             {townName && showTown && <TownSign townName={townName} />}
@@ -286,16 +285,6 @@ const styles = StyleSheet.create({
     },
     map: {
         flex: 1
-    },
-    loadingContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    loadingText: {
-        fontSize: 24,
-        color: 'rgba(0, 0, 0, 0.5)',
-        fontWeight: 'bold',
     },
     currentLocationButton: {
         position: 'absolute',

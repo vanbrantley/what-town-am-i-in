@@ -9,9 +9,6 @@ const LocationDenied = ({ onGrantPermission }) => {
 
     return (
         <View style={styles.container}>
-            {/* <Text style={styles.locationDeniedText}>Location Permission Denied</Text>
-            <Text style={styles.locationDeniedText}>Enable Location Access in System Settings</Text>
-            <Text style={styles.locationDeniedText}>Settings &gt; Privacy & Security &gt; Location Services &gt; What Town Am I In? &gt; Allow Location Access </Text> */}
             <View>
                 <Text style={styles.locationDeniedText}>Location permissions are required to determine your current town</Text>
                 <TouchableOpacity style={styles.settingsButton} onPress={handleOpenSettings}>
