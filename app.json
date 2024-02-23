@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "what-town-am-i-in",
+    "name": "What Town Am I In?",
     "slug": "what-town-am-i-in",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "platforms": [
       "ios"
     ],

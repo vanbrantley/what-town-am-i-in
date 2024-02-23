@@ -47,11 +47,12 @@ export default function App() {
   return (
     <View style={styles.container}>
       {loading ? (
-        <Text style={styles.loadingText}>Loading...</Text>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
       ) : locationPermission === 'granted' ? (
         <Map />
       ) : (
-        // <LocationDenied />
         <LocationDenied onGrantPermission={checkAndRequestPermission} />
       )}
     </View>
@@ -62,6 +63,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
     fontSize: 24,
