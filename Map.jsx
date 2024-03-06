@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { AppState, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axios from 'axios';
@@ -7,6 +7,9 @@ import TownSign from './TownSign';
 import Loading from './Loading';
 
 const Map = () => {
+
+    const appState = useRef(AppState.currentState);
+    const initialUpdateDone = useRef(false);
 
     const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
     const [previousLocation, setPreviousLocation] = useState(null);
@@ -17,34 +20,68 @@ const Map = () => {
     const mapViewRef = useRef(null);
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 
+    const updateLocation = async () => {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                console.error('Location permission denied');
+                return;
+            }
+
+            const currentLocation = await Location.getCurrentPositionAsync({});
+            // console.log(currentLocation);
+            setCurrentLocationMarker(currentLocation);
+            // console.log('Set location');
+        } catch (error) {
+            console.error('Error updating location:', error);
+        }
+    };
+
     useEffect(() => {
-        const updateLocation = async () => {
+        const updateLocationAndSetFlag = async () => {
             try {
                 const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    console.error('Location permission denied');
-                    return;
+                if (status === 'granted') {
+                    await updateLocation();
+                    initialUpdateDone.current = true;
                 }
-
-                const currentLocation = await Location.getCurrentPositionAsync({});
-                // console.log(currentLocation);
-                setCurrentLocationMarker(currentLocation);
-                // console.log('Set location');
             } catch (error) {
                 console.error('Error updating location:', error);
             }
         };
 
+        // Initial update if permission is already granted
+        updateLocationAndSetFlag();
+
+        // Set up the interval for subsequent updates
         const intervalInSeconds = 30;
-        const locationUpdateInterval = setInterval(updateLocation, intervalInSeconds * 1000);
+        const locationUpdateInterval = setInterval(async () => {
+            if (initialUpdateDone.current) {
+                await updateLocation();
+            }
+        }, intervalInSeconds * 1000);
 
-        // Initial update
-        updateLocation();
+        // update location when app comes to the foreground
+        const handleAppStateChange = async (nextAppState) => {
+            if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+                // App has come to the foreground
+                if (initialUpdateDone.current) {
+                    await updateLocation();
+                }
+            }
+            appState.current = nextAppState;
+        };
 
-        // Clean up interval on component unmount
-        return () => clearInterval(locationUpdateInterval);
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+        // Clean up the subscription and interval on component unmount
+        return () => {
+            clearInterval(locationUpdateInterval);
+            subscription.remove();
+        };
     }, []);
 
+    // get town when the current location marker changes
     useEffect(() => {
         if (currentLocationMarker) handleGetTown();
     }, [currentLocationMarker]);
@@ -84,6 +121,7 @@ const Map = () => {
 
     const getTownFromCoordinates = async (latitude, longitude, apiKey) => {
         try {
+            console.log('requesting API...');
             const response = await axios.get(
                 `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
             );

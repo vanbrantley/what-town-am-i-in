@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { AppState, StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import * as Location from 'expo-location';
 import Map from './Map';
 import LocationDenied from './LocationDenied';
@@ -27,7 +27,6 @@ export default function App() {
         // App has come to the foreground
         checkAndRequestPermission();
       }
-
       appState.current = nextAppState;
     };
 
