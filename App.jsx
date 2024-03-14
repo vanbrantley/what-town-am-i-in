@@ -1,15 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
 import * as Location from 'expo-location';
+import NetInfo from '@react-native-community/netinfo';
 import Map from './Map';
 import LocationDenied from './LocationDenied';
 import Loading from './Loading';
+import NoConnection from './NoConnection';
 
 export default function App() {
 
   const appState = useRef(AppState.currentState);
   const [locationPermission, setLocationPermission] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(true);
 
   const checkAndRequestPermission = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -18,6 +21,13 @@ export default function App() {
   };
 
   useEffect(() => {
+
+    // event listener to monitor network status
+    const unsubscribe = NetInfo.addEventListener(state => {
+      // console.log('Connection type', state.type);
+      // console.log('Is connected?', state.isConnected);
+      setIsConnected(state.isConnected);
+    });
 
     const handleAppStateChange = (nextAppState) => {
       if (
@@ -40,18 +50,23 @@ export default function App() {
 
     return () => {
       subscription.remove();
+      unsubscribe();
     };
 
   }, []);
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <Loading />
-      ) : locationPermission === 'granted' ? (
-        <Map />
+      {!isConnected ? (
+        <NoConnection />
       ) : (
-        <LocationDenied onGrantPermission={checkAndRequestPermission} />
+        loading ? (
+          <Loading />
+        ) : locationPermission === 'granted' ? (
+          <Map />
+        ) : (
+          <LocationDenied onGrantPermission={checkAndRequestPermission} />
+        )
       )}
     </View>
   );
