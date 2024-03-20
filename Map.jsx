@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { AppState, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { AppState, View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axios from 'axios';
@@ -13,9 +13,11 @@ const Map = () => {
 
     const [currentLocationMarker, setCurrentLocationMarker] = useState(null);
     const [previousLocation, setPreviousLocation] = useState(null);
-    // const [userPlacedMarker, setUserPlacedMarker] = useState(null);
     const [townName, setTownName] = useState(null);
     const [showTown, setShowTown] = useState(false);
+
+    const devMode = false;
+    const [userPlacedMarker, setUserPlacedMarker] = useState(null);
 
     const mapViewRef = useRef(null);
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
@@ -86,27 +88,9 @@ const Map = () => {
         if (currentLocationMarker) handleGetTown();
     }, [currentLocationMarker]);
 
-    // useEffect(() => {
-    //     if (userPlacedMarker) handleGetUserPlacedMarkerTown();
-    // }, [userPlacedMarker]);
-
-    // const handleMapPress = (coordinate) => {
-    //     const userPlacedLocation = {
-    //         coords: {
-    //             latitude: coordinate.latitude,
-    //             longitude: coordinate.longitude,
-    //             altitude: null,
-    //             accuracy: null,
-    //             altitudeAccuracy: null,
-    //             heading: null,
-    //             speed: null,
-    //         },
-    //         timestamp: 0,
-    //     };
-
-    //     setUserPlacedMarker(userPlacedLocation);
-
-    // };
+    useEffect(() => {
+        if (devMode && userPlacedMarker) handleGetUserPlacedMarkerTown();
+    }, [userPlacedMarker]);
 
     const centerToCurrentLocation = () => {
         if (currentLocationMarker && mapViewRef.current) {
@@ -176,12 +160,13 @@ const Map = () => {
         // a = sin^2(dTheta/2) + cos(theta1) * cos(theta2) * sin^2(dLambda/2) where theta is latitude, lambda is longitutde (in radians)
         // c = 2 * atan2(sqrt(a), sqrt(1 - a))
         // d = R * c
-
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c;
+
         return distance;
+
     };
 
     const handleGetTown = async () => {
@@ -242,23 +227,51 @@ const Map = () => {
         }
     };
 
-    // const handleGetUserPlacedMarkerTown = async () => {
-    //     if (userPlacedMarker) {
-    //         const town = await getTownFromCoordinates(
-    //             userPlacedMarker.coords.latitude,
-    //             userPlacedMarker.coords.longitude,
-    //             API_KEY
-    //         );
+    const handleGetUserPlacedMarkerTown = async () => {
+        if (devMode && userPlacedMarker) {
+            const town = await getTownFromCoordinates(
+                userPlacedMarker.coords.latitude,
+                userPlacedMarker.coords.longitude,
+                API_KEY
+            );
 
-    //         // Set the town name in the state variable
-    //         setTownName(town);
-    //         setShowTown(true);
-    //         console.log('Town Name:', town);
-    //     } else {
-    //         // Handle the case when userPlacedMarker is null
-    //         console.warn('userPlacedMarker is null. Cannot fetch town data.');
-    //     }
-    // };
+            // Set the town name in the state variable
+            setTownName(town);
+            setShowTown(true);
+            console.log('Town Name:', town);
+        } else if (userPlacedMarker) {
+            // handle case when userPlacedMarker is true, but devMode is false
+            console.warn('devMode is currently disabled.');
+        } else {
+            // handle case when userPlacedMarker is null
+            console.warn('userPlacedMarker is null. Cannot fetch town data.');
+        }
+    };
+
+    const handleMapPress = (coordinate) => {
+
+        const userPlacedLocation = {
+            coords: {
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
+                altitude: null,
+                accuracy: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+            },
+            timestamp: 0,
+        };
+
+        setUserPlacedMarker(userPlacedLocation);
+
+    };
+
+    const conditionallyDropUserPin = (e) => {
+        if (devMode) {
+            handleMapPress(e.nativeEvent.coordinate);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -266,7 +279,7 @@ const Map = () => {
                 <MapView
                     ref={mapViewRef}
                     style={styles.map}
-                    // onPress={(e) => handleMapPress(e.nativeEvent.coordinate)}
+                    onPress={conditionallyDropUserPin}
                     initialRegion={{
                         latitude: currentLocationMarker.coords.latitude,
                         longitude: currentLocationMarker.coords.longitude,
@@ -282,7 +295,7 @@ const Map = () => {
                         title="Your Location"
                         pinColor="red"
                     />
-                    {/* {userPlacedMarker && (
+                    {devMode && userPlacedMarker && (
                         <Marker
                             coordinate={{
                                 latitude: userPlacedMarker.coords.latitude,
@@ -290,7 +303,7 @@ const Map = () => {
                             }}
                             pinColor="green"
                         />
-                    )} */}
+                    )}
                 </MapView>
 
             ) : (
@@ -299,18 +312,11 @@ const Map = () => {
 
             {townName && showTown && <TownSign townName={townName} />}
 
-            {/* <TouchableOpacity
-                style={styles.getUserPlacedTownButton}
-                onPress={handleGetUserPlacedMarkerTown}
-            >
-                <Text>Placed Marker Town</Text>
-            </TouchableOpacity> */}
-
             {currentLocationMarker && <TouchableOpacity
-                style={styles.currentLocationButton}
+                style={styles.focusZoomButton}
                 onPress={centerToCurrentLocation}
             >
-                <Text>Current Location</Text>
+                <Image source={require('./assets/crosshair.png')} style={{ width: 50, height: 50 }} />
             </TouchableOpacity>}
 
         </View>
@@ -324,19 +330,9 @@ const styles = StyleSheet.create({
     map: {
         flex: 1
     },
-    currentLocationButton: {
+    focusZoomButton: {
         position: 'absolute',
         bottom: 20,
-        right: 20,
-        backgroundColor: 'white',
-        padding: 10,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    getUserPlacedTownButton: {
-        position: 'absolute',
-        bottom: 100,
         right: 20,
         backgroundColor: 'white',
         padding: 10,
