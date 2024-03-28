@@ -301,7 +301,7 @@ const Map = () => {
                                 latitude: userPlacedMarker.coords.latitude,
                                 longitude: userPlacedMarker.coords.longitude,
                             }}
-                            pinColor="green"
+                            pinColor="red"
                         />
                     )}
                 </MapView>
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     },
     focusZoomButton: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 55,
         right: 20,
         backgroundColor: 'white',
         padding: 10,

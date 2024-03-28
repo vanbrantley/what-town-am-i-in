@@ -6,7 +6,7 @@ const NoConnection = () => {
         <View style={styles.container}>
             <View>
                 <Text style={styles.noConnectionText}>Looks like there's a problem with your internet connection</Text>
-                <Text style={styles.noConnectionText}>Connect to find out what town you are in</Text>
+                <Text style={styles.noConnectionText}>Connect to find out what town you're in</Text>
             </View>
         </View>
     );
