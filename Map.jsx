@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { AppState, View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
+import { AppState, View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import TownSign from './TownSign';
 import Loading from './Loading';
+import Menu from './Menu';
 
 const Map = () => {
 
@@ -15,9 +16,10 @@ const Map = () => {
     const [previousLocation, setPreviousLocation] = useState(null);
     const [townName, setTownName] = useState(null);
     const [showTown, setShowTown] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
 
     // dev mode variables
-    const enableUserPlacedPins = true;
+    const enableUserPlacedPins = false;
     const disableLocationFetching = true;
     const [userPlacedPin, setuserPlacedPin] = useState(null);
 
@@ -278,7 +280,12 @@ const Map = () => {
         // }
     };
 
-    const handleMapPress = (coordinate) => {
+    const handleMapPress = (e) => {
+        if (showMenu) setShowMenu(false);
+        if (enableUserPlacedPins) addUserPlacedPin(e.nativeEvent.coordinate);
+    }
+
+    const addUserPlacedPin = (coordinate) => {
 
         // match the Location.LocationObject type definition
         const userPlacedLocation = {
@@ -298,12 +305,6 @@ const Map = () => {
 
     };
 
-    const conditionallyDropUserPin = (e) => {
-        if (enableUserPlacedPins) {
-            handleMapPress(e.nativeEvent.coordinate);
-        }
-    };
-
     const printCurrentLocationCoords = () => {
         const latitude = currentLocationMarker.coords.latitude;
         const longitude = currentLocationMarker.coords.longitude;
@@ -312,7 +313,7 @@ const Map = () => {
     };
 
     const toggleShowMenu = () => {
-        console.log('Toggle Show Menu pressed');
+        setShowMenu(prevShowMenu => !prevShowMenu);
     };
 
     return (
@@ -321,7 +322,7 @@ const Map = () => {
                 <MapView
                     ref={mapViewRef}
                     style={styles.map}
-                    onPress={conditionallyDropUserPin}
+                    onPress={handleMapPress}
                     initialRegion={{
                         latitude: currentLocationMarker.coords.latitude,
                         longitude: currentLocationMarker.coords.longitude,
@@ -367,6 +368,8 @@ const Map = () => {
             >
                 <Image source={require('./assets/crosshair.png')} style={{ width: 50, height: 50 }} />
             </TouchableOpacity>}
+
+            {showMenu && <Menu signedIn={true} />}
 
         </View>
     );
