@@ -2,7 +2,7 @@
   "expo": {
     "name": "What Town Am I In?",
     "slug": "what-town-am-i-in",
-    "version": "1.0.3",
+    "version": "1.0.5",
     "platforms": [
       "ios"
     ],
@@ -19,7 +19,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vanbrantley.whattownamiin"
+      "bundleIdentifier": "com.vanbrantley.whattownamiin",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Turning on location services allows us to tell you what town you're currently in."
+      }
     },
     "android": {
       "adaptiveIcon": {
