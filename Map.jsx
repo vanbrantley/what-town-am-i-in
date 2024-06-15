@@ -16,26 +16,32 @@ const Map = () => {
     const [townName, setTownName] = useState(null);
     const [showTown, setShowTown] = useState(false);
 
-    const devMode = false;
-    const [userPlacedMarker, setUserPlacedMarker] = useState(null);
+    // dev mode variables
+    const enableUserPlacedPins = true;
+    const disableLocationFetching = true;
+    const [userPlacedPin, setuserPlacedPin] = useState(null);
 
     const mapViewRef = useRef(null);
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 
     const updateLocation = async () => {
-        try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                console.error('Location permission denied');
-                return;
+        if (!disableLocationFetching) { // don't update location if location fetching is disabled
+
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') {
+                    console.error('Location permission denied');
+                    return;
+                }
+
+                const currentLocation = await Location.getCurrentPositionAsync({});
+                // console.log(currentLocation);
+                setCurrentLocationMarker(currentLocation);
+                // console.log('Set location');
+            } catch (error) {
+                console.error('Error updating location:', error);
             }
 
-            const currentLocation = await Location.getCurrentPositionAsync({});
-            // console.log(currentLocation);
-            setCurrentLocationMarker(currentLocation);
-            // console.log('Set location');
-        } catch (error) {
-            console.error('Error updating location:', error);
         }
     };
 
@@ -44,6 +50,24 @@ const Map = () => {
             try {
                 const { status } = await Location.requestForegroundPermissionsAsync();
                 if (status === 'granted') {
+                    // if location fetching is disabled for dev mode, set location to hardcoded lat & lon in env file
+                    if (disableLocationFetching) {
+                        // match the Location.LocationObject type definition
+                        const hardcodedLocation = {
+                            coords: {
+                                latitude: process.env.EXPO_PUBLIC_LATITUDE,
+                                longitude: process.env.EXPO_PUBLIC_LONGITUDE,
+                                altitude: null,
+                                accuracy: null,
+                                altitudeAccuracy: null,
+                                heading: null,
+                                speed: null,
+                            },
+                            timestamp: 0,
+                        };
+
+                        setCurrentLocationMarker(hardcodedLocation);
+                    }
                     await updateLocation();
                     initialUpdateDone.current = true;
                 }
@@ -85,12 +109,16 @@ const Map = () => {
 
     // get town when the current location marker changes
     useEffect(() => {
-        if (currentLocationMarker) handleGetTown();
+        if (disableLocationFetching) {
+            setTownName(process.env.EXPO_PUBLIC_TOWN_NAME);
+            setShowTown(true);
+        } else if (currentLocationMarker) handleGetTown();
+        // if (currentLocationMarker) handleGetTown();
     }, [currentLocationMarker]);
 
     useEffect(() => {
-        if (devMode && userPlacedMarker) handleGetUserPlacedMarkerTown();
-    }, [userPlacedMarker]);
+        if (enableUserPlacedPins && userPlacedPin) handleGetUserPlacedPinTown();
+    }, [userPlacedPin]);
 
     const centerToCurrentLocation = () => {
         if (currentLocationMarker && mapViewRef.current) {
@@ -227,11 +255,11 @@ const Map = () => {
         }
     };
 
-    const handleGetUserPlacedMarkerTown = async () => {
-        if (devMode && userPlacedMarker) {
+    const handleGetUserPlacedPinTown = async () => {
+        if (!disableLocationFetching && enableUserPlacedPins && userPlacedPin) {
             const town = await getTownFromCoordinates(
-                userPlacedMarker.coords.latitude,
-                userPlacedMarker.coords.longitude,
+                userPlacedPin.coords.latitude,
+                userPlacedPin.coords.longitude,
                 API_KEY
             );
 
@@ -239,17 +267,20 @@ const Map = () => {
             setTownName(town);
             setShowTown(true);
             console.log('Town Name:', town);
-        } else if (userPlacedMarker) {
-            // handle case when userPlacedMarker is true, but devMode is false
-            console.warn('devMode is currently disabled.');
-        } else {
-            // handle case when userPlacedMarker is null
-            console.warn('userPlacedMarker is null. Cannot fetch town data.');
         }
+
+        // else if (userPlacedPin) {
+        //     // handle case when userPlacedPin is true, but enableUserPlacedPins is false
+        //     console.warn('enableUserPlacedPins is currently disabled.');
+        // } else {
+        //     // handle case when userPlacedPin is null
+        //     console.warn('userPlacedPin is null. Cannot fetch town data.');
+        // }
     };
 
     const handleMapPress = (coordinate) => {
 
+        // match the Location.LocationObject type definition
         const userPlacedLocation = {
             coords: {
                 latitude: coordinate.latitude,
@@ -263,14 +294,25 @@ const Map = () => {
             timestamp: 0,
         };
 
-        setUserPlacedMarker(userPlacedLocation);
+        setuserPlacedPin(userPlacedLocation);
 
     };
 
     const conditionallyDropUserPin = (e) => {
-        if (devMode) {
+        if (enableUserPlacedPins) {
             handleMapPress(e.nativeEvent.coordinate);
         }
+    };
+
+    const printCurrentLocationCoords = () => {
+        const latitude = currentLocationMarker.coords.latitude;
+        const longitude = currentLocationMarker.coords.longitude;
+        console.log('Latitude: ', latitude);
+        console.log('Longitude: ', longitude);
+    };
+
+    const toggleShowMenu = () => {
+        console.log('Toggle Show Menu pressed');
     };
 
     return (
@@ -295,11 +337,11 @@ const Map = () => {
                         title="Your Location"
                         pinColor="red"
                     />
-                    {devMode && userPlacedMarker && (
+                    {enableUserPlacedPins && userPlacedPin && (
                         <Marker
                             coordinate={{
-                                latitude: userPlacedMarker.coords.latitude,
-                                longitude: userPlacedMarker.coords.longitude,
+                                latitude: userPlacedPin.coords.latitude,
+                                longitude: userPlacedPin.coords.longitude,
                             }}
                             pinColor="red"
                         />
@@ -311,6 +353,13 @@ const Map = () => {
             )}
 
             {townName && showTown && <TownSign townName={townName} />}
+
+            <TouchableOpacity
+                style={styles.menuButton}
+                onPress={toggleShowMenu}
+            >
+                <Image source={require('./assets/hamburger-menu.png')} style={{ width: 50, height: 50 }} />
+            </TouchableOpacity>
 
             {currentLocationMarker && <TouchableOpacity
                 style={styles.focusZoomButton}
@@ -331,6 +380,16 @@ const styles = StyleSheet.create({
         flex: 1
     },
     focusZoomButton: {
+        position: 'absolute',
+        bottom: 55,
+        left: 20,
+        backgroundColor: 'white',
+        padding: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    menuButton: {
         position: 'absolute',
         bottom: 55,
         right: 20,
