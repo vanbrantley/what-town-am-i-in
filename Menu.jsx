@@ -1,6 +1,9 @@
+import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 
-const Menu = ({ signedIn }) => {
+const Menu = ({ signedIn, history }) => {
+
+    const [state, setState] = useState(null);
 
     return (
         <View style={styles.menuContainer}>

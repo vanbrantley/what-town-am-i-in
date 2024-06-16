@@ -20,11 +20,54 @@ const Map = () => {
 
     // dev mode variables
     const enableUserPlacedPins = false;
-    const disableLocationFetching = true;
+    const disableLocationFetching = false;
     const [userPlacedPin, setuserPlacedPin] = useState(null);
 
     const mapViewRef = useRef(null);
     const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
+
+    const mockHistoryPins = [
+        {
+            "name": "Millburn Library",
+            "town": "Millburn, NJ",
+            "latitude": 40.72690417062559,
+            "longitude": -74.30596296682424,
+            "color": "blue",
+            "date": ""
+        },
+        {
+            "name": "Summit",
+            "town": "Summit, NJ",
+            "latitude": 40.71137133085864,
+            "longitude": -74.36412438896136,
+            "color": "red",
+            "date": ""
+        },
+        {
+            "name": "Dover",
+            "town": "Dover, NJ",
+            "latitude": 40.875905939896676,
+            "longitude": -74.5560027671473,
+            "color": "orange",
+            "date": ""
+        },
+        {
+            "name": "Edison",
+            "town": "Edison, NJ",
+            "latitude": 40.52075965473891,
+            "longitude": -74.41356242939462,
+            "color": "green",
+            "date": ""
+        },
+        {
+            "name": "West Caldwell",
+            "town": "West Caldwell, NJ",
+            "latitude": 40.84406846136308,
+            "longitude": -74.27259054873232,
+            "color": "purple",
+            "date": ""
+        }
+    ];
 
     const updateLocation = async () => {
         if (!disableLocationFetching) { // don't update location if location fetching is disabled
@@ -312,7 +355,16 @@ const Map = () => {
         console.log('Longitude: ', longitude);
     };
 
+    const printUserPlacedLocationCoords = () => {
+        const latitude = userPlacedPin.coords.latitude;
+        const longitude = userPlacedPin.coords.longitude;
+        console.log('Latitude: ', latitude);
+        console.log('Longitude: ', longitude);
+    };
+
     const toggleShowMenu = () => {
+        // printCurrentLocationCoords();
+        // printUserPlacedLocationCoords();
         setShowMenu(prevShowMenu => !prevShowMenu);
     };
 
@@ -338,6 +390,22 @@ const Map = () => {
                         title="Your Location"
                         pinColor="red"
                     />
+
+                    {/* Add mock history pins */}
+                    {mockHistoryPins.map((pin, i) => {
+                        return (
+                            <Marker
+                                key={i}
+                                coordinate={{
+                                    latitude: pin.latitude,
+                                    longitude: pin.longitude,
+                                }}
+                                title={pin.name}
+                                pinColor={pin.color}
+                            />
+                        )
+                    })}
+
                     {enableUserPlacedPins && userPlacedPin && (
                         <Marker
                             coordinate={{
@@ -369,7 +437,7 @@ const Map = () => {
                 <Image source={require('./assets/crosshair.png')} style={{ width: 50, height: 50 }} />
             </TouchableOpacity>}
 
-            {showMenu && <Menu signedIn={true} />}
+            {showMenu && <Menu signedIn={true} history={mockHistoryPins} />}
 
         </View>
     );
